@@ -18,7 +18,7 @@ public class AuthorServiceImpl implements AuthorService {
     public Author criar(Author author) {
         try {
             buscarPorID(author.getId_author());
-            throw new BookUnsupportedOperation("Livro já cadastrado");
+            throw new BookUnsupportedOperation("Livro já cadastrado na hora");
         } catch (EntidadeNaoLocalizada e) {
             return authorRepository.criar(author);
         }
@@ -34,7 +34,7 @@ public class AuthorServiceImpl implements AuthorService {
         try {
             return authorRepository.atualizar(author);
         } catch (EntidadeNaoLocalizada e) {
-            throw new EntidadeNaoLocalizada("O livro que está tentando editar não existe");
+            throw new EntidadeNaoLocalizada("O livro que está tentando editar não existe ou não está disponivel");
         }
     }
 

@@ -38,9 +38,9 @@ public class AuthorRestController {
             Author author = this.authorController.buscarPorID(id);
             return Response.ok(author).build();
         } catch (EntidadeNaoLocalizada e){
-            return Response.status(Response.Status.NOT_FOUND).build(); // 404 só quando realmente não existe
+            return Response.status(Response.Status.NOT_FOUND).build();
         } catch (Exception e){
-            return Response.status(Response.Status.INTERNAL_SERVER_ERROR).entity(e.getMessage()).build(); // 500 pros demais erros
+            return Response.status(Response.Status.INTERNAL_SERVER_ERROR).entity(e.getMessage()).build();
         }
     }
 

@@ -19,7 +19,7 @@ public class BookServiceImpl implements BookService {
     public Book criar(Book book) {
         try {
             buscarPorID(book.getId_book());
-            throw new BookUnsupportedOperation("Livro já cadastrado");
+            throw new BookUnsupportedOperation("Livro foi cadastrado");
         } catch (EntidadeNaoLocalizada e) {
             return bookRepository.criar(book);
         }
@@ -31,7 +31,7 @@ public class BookServiceImpl implements BookService {
             buscarPorID(book.getId_book());
             return bookRepository.atualizar(book);
         } catch (EntidadeNaoLocalizada e) {
-            throw new EntidadeNaoLocalizada("O livro que está tentando editar não existe");
+            throw new EntidadeNaoLocalizada("O livro que está tentando editar não existe ou não está disponivel");
         }
     }
 

@@ -35,7 +35,7 @@ public class JdbcBookRepository implements BookRepository {
 
             int affected = stmt.executeUpdate();
             if (affected == 0) {
-                throw new InfraestruturaException("Falha ao inserir livro.");
+                throw new InfraestruturaException("Error ao inserir livro.");
             }
             return book;
 
@@ -61,7 +61,7 @@ public class JdbcBookRepository implements BookRepository {
                     return mapearBook(rs);
                 }
             }
-            throw new EntidadeNaoLocalizada("Livro não encontrado (id=" + id + ").");
+            throw new EntidadeNaoLocalizada("Livro não localizado (id=" + id + ").");
 
         } catch (SQLException e) {
             throw new InfraestruturaException("Erro ao buscar livro por id: " + e.getMessage(), e);
@@ -144,7 +144,7 @@ public class JdbcBookRepository implements BookRepository {
             }
             return books;
         } catch (SQLException e) {
-            throw new InfraestruturaException("Erro ao listar livros por autor: " + e.getMessage(), e);
+            throw new InfraestruturaException("Erro ao testar os livros por autor: " + e.getMessage(), e);
         }
 
     }

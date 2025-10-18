@@ -30,7 +30,7 @@ public class JdbcAuthorRepository implements AuthorRepository {
 
             int affectedRows = stmt.executeUpdate();
             if (affectedRows == 0) {
-                throw new InfraestruturaException("Falha ao criar autor, nenhuma linha afetada.");
+                throw new InfraestruturaException("Error ao criar autor, nenhuma linha que tenha sido prejudicada.");
             }
 
             return author;
