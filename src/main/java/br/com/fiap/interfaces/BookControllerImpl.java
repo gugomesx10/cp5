@@ -4,6 +4,8 @@ import br.com.fiap.domain.exceptions.EntidadeNaoLocalizada;
 import br.com.fiap.domain.model.Book;
 import br.com.fiap.domain.service.BookService;
 
+import java.util.List;
+
 public class BookControllerImpl implements BookController {
 
     private final BookService bookService;
@@ -23,12 +25,17 @@ public class BookControllerImpl implements BookController {
     }
 
     @Override
-    public Book atualizar(Book book) {
+    public Book atualizar(Book book) throws EntidadeNaoLocalizada {
         return bookService.atualizar(book);
     }
 
     @Override
     public void deletar(int id) throws EntidadeNaoLocalizada {
-        bookService.deletar(id);
+        this.bookService.deletar(id);
+    }
+
+    @Override
+    public List<Book> buscarBooksPorAuthor(int idAuthor) {
+        return this.bookService.buscarBooksPorAuthor(idAuthor);
     }
 }

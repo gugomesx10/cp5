@@ -1,66 +1,50 @@
 package br.com.fiap.application.service;
 
+import br.com.fiap.application.exception.BookUnsupportedOperation;
 import br.com.fiap.domain.exceptions.EntidadeNaoLocalizada;
 import br.com.fiap.domain.model.Author;
 import br.com.fiap.domain.repository.AuthorRepository;
 import br.com.fiap.domain.service.AuthorService;
 
-import java.util.List;
-import java.util.Optional;
-
 public class AuthorServiceImpl implements AuthorService {
 
-    private final AuthorRepository repository;
+    private final AuthorRepository authorRepository;
 
-    public AuthorServiceImpl(AuthorRepository repository) {
-        this.repository = repository;
+    public AuthorServiceImpl(AuthorRepository authorRepository) {
+        this.authorRepository = authorRepository;
     }
 
     @Override
     public Author criar(Author author) {
-        repository.save(author);
-        return author;
-    }
-
-    @Override
-    public Author buscarPorId(Long id) throws EntidadeNaoLocalizada {
-        return null;
-    }
-
-    @Override
-    public List<Author> listarTodos() {
-        return List.of();
+        try {
+            buscarPorID(author.getId_author());
+            throw new BookUnsupportedOperation("Livro já cadastrado");
+        } catch (EntidadeNaoLocalizada e) {
+            return authorRepository.criar(author);
+        }
     }
 
     @Override
     public Author buscarPorID(int id) throws EntidadeNaoLocalizada {
-        Optional<Author> author = repository.findById((long) id);
-        return author.orElseThrow(() ->
-                new EntidadeNaoLocalizada("Autor com ID " + id + " não encontrado"));
+        return authorRepository.buscarPorID(id);
     }
 
     @Override
-    public Author atualizar(Author author) {
-        Optional<Author> existente = repository.findById(author.getId());
-        if (existente.isEmpty()) {
-            throw new EntidadeNaoLocalizada("Autor com ID " + author.getId() + " não encontrado");
+    public Author atualizar(Author author) throws EntidadeNaoLocalizada {
+        try {
+            return authorRepository.atualizar(author);
+        } catch (EntidadeNaoLocalizada e) {
+            throw new EntidadeNaoLocalizada("O livro que está tentando editar não existe");
         }
-        repository.delete(author.getId());
-        repository.save(author);
-        return author;
-    }
-
-    @Override
-    public void deletar(Long id) throws EntidadeNaoLocalizada {
-
     }
 
     @Override
     public void deletar(int id) throws EntidadeNaoLocalizada {
-        Optional<Author> existente = repository.findById((long) id);
-        if (existente.isEmpty()) {
-            throw new EntidadeNaoLocalizada("Autor com ID " + id + " não encontrado");
+        try {
+            buscarPorID(id);
+            authorRepository.deletar(id);
+        } catch (EntidadeNaoLocalizada e) {
+            throw new EntidadeNaoLocalizada("Livro não localizado");
         }
-        repository.delete((long) id);
     }
 }

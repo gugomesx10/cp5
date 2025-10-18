@@ -1,16 +1,18 @@
 package br.com.fiap.infrastructure.persistence;
 
+import br.com.fiap.infrastructure.exceptions.InfraestruturaException;
+import br.com.fiap.domain.exceptions.EntidadeNaoLocalizada;
 import br.com.fiap.domain.model.Book;
 import br.com.fiap.domain.repository.BookRepository;
-import br.com.fiap.infrastructure.exceptions.InfraestruturaException;
 
-import java.sql.*;
+import java.sql.Connection;
+import java.sql.PreparedStatement;
+import java.sql.ResultSet;
+import java.sql.SQLException;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.Optional;
 
 public class JdbcBookRepository implements BookRepository {
-
     private final DatabaseConnection databaseConnection;
 
     public JdbcBookRepository(DatabaseConnection databaseConnection) {
@@ -18,113 +20,132 @@ public class JdbcBookRepository implements BookRepository {
     }
 
     @Override
-    public void save(Book book) {
-        String sql = "INSERT INTO BOOK (TITLE, ISBN, AUTHOR_ID) VALUES (?, ?, ?)";
+    public Book criar(Book book) {
+        final String sql = """
+                INSERT INTO T_BOOK (id_book, title, isbn, T_AUTHOR_id_author)
+                VALUES (?, ?, ?, ?)
+                """;
+        try (Connection conn = databaseConnection.getConnection();
+             PreparedStatement stmt = conn.prepareStatement(sql)) {
+
+            stmt.setInt(1, book.getId_book());                 // ajuste para getIdBook() se necessário
+            stmt.setString(2, book.getTitle());
+            stmt.setString(3, book.getIsbn());
+            stmt.setInt(4, book.getAuthorId());
+
+            int affected = stmt.executeUpdate();
+            if (affected == 0) {
+                throw new InfraestruturaException("Falha ao inserir livro.");
+            }
+            return book;
+
+        } catch (SQLException e) {
+            throw new InfraestruturaException("Erro ao inserir livro: " + e.getMessage(), e);
+        }
+    }
+
+    @Override
+    public Book buscarPorID(int id) throws EntidadeNaoLocalizada {
+        final String sql = """
+                SELECT id_book, title, isbn, T_AUTHOR_id_author
+                  FROM T_BOOK
+                 WHERE id_book = ?
+                """;
+        try (Connection conn = databaseConnection.getConnection();
+             PreparedStatement stmt = conn.prepareStatement(sql)) {
+
+            stmt.setInt(1, id);
+
+            try (ResultSet rs = stmt.executeQuery()) {
+                if (rs.next()) {
+                    return mapearBook(rs);
+                }
+            }
+            throw new EntidadeNaoLocalizada("Livro não encontrado (id=" + id + ").");
+
+        } catch (SQLException e) {
+            throw new InfraestruturaException("Erro ao buscar livro por id: " + e.getMessage(), e);
+        }
+    }
+
+    private Book mapearBook(ResultSet rs) throws SQLException {
+        Integer id = rs.getInt("id_author");
+        String title = rs.getString("title");
+        String isbn = rs.getString("isbn");
+        Integer authorId = rs.getInt("T_AUTHOR_id_author");
+        Book book = new Book(id, title, isbn, authorId);
+        return book;
+    }
+
+    @Override
+    public Book atualizar(Book book) {
+        String sql = """
+               UPDATE T_BOOK SET title = ?, isbn  = ?, T_AUTHOR_id_author = ? WHERE id_book = ?
+               """;
+
         try (Connection conn = databaseConnection.getConnection();
              PreparedStatement stmt = conn.prepareStatement(sql)) {
 
             stmt.setString(1, book.getTitle());
             stmt.setString(2, book.getIsbn());
-            stmt.setLong(3, book.getAuthorId());
-            stmt.executeUpdate();
+            stmt.setInt(3, book.getAuthorId());
+            stmt.setInt(4, book.getId_book());
 
-        } catch (SQLException e) {
-            throw new InfraestruturaException("Erro ao salvar o livro", e);
-        }
-    }
-
-    @Override
-    public List<Book> findAll() {
-        List<Book> books = new ArrayList<>();
-        String sql = "SELECT ID, TITLE, ISBN, AUTHOR_ID FROM BOOK";
-        try (Connection conn = databaseConnection.getConnection();
-             PreparedStatement stmt = conn.prepareStatement(sql);
-             ResultSet rs = stmt.executeQuery()) {
-
-            while (rs.next()) {
-                books.add(new Book(
-                        rs.getLong("ID"),
-                        rs.getString("TITLE"),
-                        rs.getString("ISBN"),
-                        rs.getLong("AUTHOR_ID")
-                ));
+            int affected = stmt.executeUpdate();
+            if (affected == 0) {
+                throw new InfraestruturaException("Falha ao atualizar livro (id=" + book.getId_book() + ").");
             }
+            return book;
 
         } catch (SQLException e) {
-            throw new InfraestruturaException("Erro ao listar livros", e);
+            throw new InfraestruturaException("Erro ao atualizar livro: " + e.getMessage(), e);
         }
-        return books;
     }
 
     @Override
-    public Optional<Book> findById(Long id) {
-        String sql = "SELECT ID, TITLE, ISBN, AUTHOR_ID FROM BOOK WHERE ID = ?";
+    public void deletar(int id) throws EntidadeNaoLocalizada {
+        final String sql = """
+                DELETE FROM T_BOOK
+                 WHERE id_book = ?
+                """;
         try (Connection conn = databaseConnection.getConnection();
              PreparedStatement stmt = conn.prepareStatement(sql)) {
 
-            stmt.setLong(1, id);
-            ResultSet rs = stmt.executeQuery();
-
-            if (rs.next()) {
-                return Optional.of(new Book(
-                        rs.getLong("ID"),
-                        rs.getString("TITLE"),
-                        rs.getString("ISBN"),
-                        rs.getLong("AUTHOR_ID")
-                ));
+            stmt.setInt(1, id);
+            int affected = stmt.executeUpdate();
+            if (affected == 0) {
+                throw new EntidadeNaoLocalizada("Livro não encontrado para deletar (id=" + id + ").");
             }
 
         } catch (SQLException e) {
-            throw new InfraestruturaException("Erro ao buscar livro por ID", e);
-        }
-        return Optional.empty();
-    }
-
-    @Override
-    public List<Book> findByAuthor(Long authorId) {
-        return List.of();
-    }
-
-    @Override
-    public void update(Book book) {
-
-    }
-
-    @Override
-    public void delete(Long id) {
-        String sql = "DELETE FROM BOOK WHERE ID = ?";
-        try (Connection conn = databaseConnection.getConnection();
-             PreparedStatement stmt = conn.prepareStatement(sql)) {
-
-            stmt.setLong(1, id);
-            stmt.executeUpdate();
-
-        } catch (SQLException e) {
-            throw new InfraestruturaException("Erro ao deletar livro", e);
+            throw new InfraestruturaException("Erro ao deletar livro: " + e.getMessage(), e);
         }
     }
 
-    public List<Book> findByAuthorId(Long authorId) {
-        List<Book> books = new ArrayList<>();
-        String sql = "SELECT ID, TITLE, ISBN, AUTHOR_ID FROM BOOK WHERE AUTHOR_ID = ?";
+    @Override
+    public List<Book> buscarBooksPorAuthor(int idAuthor) {
+        final String sql = """
+                SELECT id_book, title, isbn, T_AUTHOR_id_author
+                  FROM T_BOOK
+                 WHERE T_AUTHOR_id_author = ?
+                 ORDER BY title
+                """;
+        final List<Book> books = new ArrayList<>();
+
         try (Connection conn = databaseConnection.getConnection();
              PreparedStatement stmt = conn.prepareStatement(sql)) {
 
-            stmt.setLong(1, authorId);
-            ResultSet rs = stmt.executeQuery();
+            stmt.setInt(1, idAuthor);
 
-            while (rs.next()) {
-                books.add(new Book(
-                        rs.getLong("ID"),
-                        rs.getString("TITLE"),
-                        rs.getString("ISBN"),
-                        rs.getLong("AUTHOR_ID")
-                ));
+            try (ResultSet rs = stmt.executeQuery()) {
+                while (rs.next()) {
+                    books.add(mapearBook(rs));
+                }
             }
-
+            return books;
         } catch (SQLException e) {
-            throw new InfraestruturaException("Erro ao listar livros por autor", e);
+            throw new InfraestruturaException("Erro ao listar livros por autor: " + e.getMessage(), e);
         }
-        return books;
+
     }
 }

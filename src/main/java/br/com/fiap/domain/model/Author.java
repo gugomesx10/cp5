@@ -1,41 +1,37 @@
 package br.com.fiap.domain.model;
 
-import br.com.fiap.domain.exceptions.ValidacaoDominioException;
-
 public class Author {
-
-    private Long id;
-    private String name;
+    private int id_author;
+    private String nome;
     private String email;
 
-    public Author(Long id, String name, String email) {
-        validar(name, email);
-        this.id = id;
-        this.name = name;
+    public Author(int id_author, String nome, String email) {
+        this.id_author = id_author;
+        this.nome = nome;
         this.email = email;
     }
 
-    private void validar(String name, String email) {
-        if (name == null || name.isBlank()) {
-            throw new ValidacaoDominioException("O nome do autor é obrigatório.");
-        }
-        if (email == null || email.isBlank()) {
-            throw new ValidacaoDominioException("O email do autor é obrigatório.");
-        }
-        if (!email.contains("@")) {
-            throw new ValidacaoDominioException("O email informado é inválido.");
-        }
+    public int getId_author() {
+        return id_author;
     }
 
-    public Long getId() {
-        return id;
+    public void setId_author(int id_author) {
+        this.id_author = id_author;
     }
 
-    public String getName() {
-        return name;
+    public String getNome() {
+        return nome;
+    }
+
+    public void setNome(String nome) {
+        this.nome = nome;
     }
 
     public String getEmail() {
         return email;
+    }
+
+    public void setEmail(String email) {
+        this.email = email;
     }
 }

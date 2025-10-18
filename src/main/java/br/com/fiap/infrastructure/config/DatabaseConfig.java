@@ -1,18 +1,29 @@
 package br.com.fiap.infrastructure.config;
 
+import br.com.fiap.domain.repository.AuthorRepository;
+import br.com.fiap.domain.repository.BookRepository;
 import br.com.fiap.infrastructure.persistence.DatabaseConnection;
+import br.com.fiap.infrastructure.persistence.DatabaseConnectionImpl;
+import br.com.fiap.infrastructure.persistence.JdbcAuthorRepository;
+import br.com.fiap.infrastructure.persistence.JdbcBookRepository;
+import io.agroal.api.AgroalDataSource;
 import jakarta.enterprise.context.ApplicationScoped;
 
-/**
- * Configura a conexão com o banco Oracle usando o DataSource
- * que o Quarkus já fornece automaticamente a partir do application.properties.
- */
 @ApplicationScoped
 public class DatabaseConfig {
 
-    private DatabaseConnection databaseConnection;
+    @ApplicationScoped
+    public DatabaseConnection databaseConnection(AgroalDataSource dataSource) {
+        return new DatabaseConnectionImpl(dataSource);
+    }
 
-    public DatabaseConnection getDatabaseConnection() {
-        return databaseConnection;
+    @ApplicationScoped
+    public BookRepository bookRepository(DatabaseConnection databaseConnection) {
+        return new JdbcBookRepository(databaseConnection);
+    }
+
+    @ApplicationScoped
+    public AuthorRepository authorRepository(DatabaseConnection databaseConnection) {
+        return new JdbcAuthorRepository(databaseConnection);
     }
 }
