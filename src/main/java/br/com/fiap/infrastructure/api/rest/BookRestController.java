@@ -65,7 +65,7 @@ public class BookRestController {
             return Response.status(Response.Status.NO_CONTENT).build();
         } catch (EntidadeNaoLocalizada e) {
             return Response.status(Response.Status.NOT_FOUND)
-                    .entity("Livro não localizado")
+                    .entity("Livro não foi localizado")
                     .build();
         } catch (RuntimeException e) {
             return Response.status(Response.Status.BAD_REQUEST)
