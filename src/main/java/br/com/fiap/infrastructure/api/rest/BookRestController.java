@@ -3,6 +3,7 @@ package br.com.fiap.infrastructure.api.rest;
 import br.com.fiap.domain.model.Book;
 import br.com.fiap.interfaces.BookController;
 import jakarta.inject.Inject;
+import jakarta.transaction.Transactional;
 import jakarta.ws.rs.*;
 import jakarta.ws.rs.core.MediaType;
 import jakarta.ws.rs.core.Response;
@@ -57,16 +58,26 @@ public class BookRestController {
 
     @DELETE
     @Path("/{id}")
+    @Transactional
     public Response delete(@PathParam("id") int id) {
         try {
             this.bookController.deletar(id);
             return Response.status(Response.Status.NO_CONTENT).build();
-        } catch (RuntimeException e) {
-            return Response.status(Response.Status.BAD_REQUEST).entity(e.getMessage()).build();
         } catch (EntidadeNaoLocalizada e) {
-            throw new RuntimeException(e);
+            return Response.status(Response.Status.NOT_FOUND)
+                    .entity("Livro não localizado")
+                    .build();
+        } catch (RuntimeException e) {
+            return Response.status(Response.Status.BAD_REQUEST)
+                    .entity("Erro ao processar requisição: " + e.getMessage())
+                    .build();
+        } catch (Exception e) {
+            return Response.status(Response.Status.INTERNAL_SERVER_ERROR)
+                    .entity("Erro interno ao deletar livro: " + e.getMessage())
+                    .build();
         }
     }
+
 
 
 
